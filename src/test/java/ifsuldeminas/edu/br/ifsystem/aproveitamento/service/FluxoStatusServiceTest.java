@@ -18,6 +18,7 @@ import ifsuldeminas.edu.br.ifsystem.aproveitamento.service.transicao.RegistrarTr
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.service.transicao.TransicaoStatus;
 import ifsuldeminas.edu.br.ifsystem.usuario.domain.Perfil;
 import org.junit.jupiter.api.BeforeEach;
+import org.springframework.context.ApplicationEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -55,6 +56,7 @@ class FluxoStatusServiceTest {
     private SolicitacaoRepository solicitacoes;
     private HistoricoStatusRepository historicos;
     private CoordenadorRepository coordenadores;
+    private ApplicationEventPublisher eventos;
     private FluxoStatusService service;
     private UUID alunoId;
     private UUID solicitacaoId;
@@ -65,7 +67,8 @@ class FluxoStatusServiceTest {
         solicitacoes = mock(SolicitacaoRepository.class);
         historicos = mock(HistoricoStatusRepository.class);
         coordenadores = mock(CoordenadorRepository.class);
-        service = new FluxoStatusService(todasTransicoes(), solicitacoes, historicos, coordenadores);
+        eventos = mock(ApplicationEventPublisher.class);
+        service = new FluxoStatusService(todasTransicoes(), solicitacoes, historicos, coordenadores, eventos);
         alunoId = UUID.randomUUID();
         solicitacaoId = UUID.randomUUID();
         solicitacao = new Solicitacao(alunoId, CURSO, "Banco de Dados", 60);
@@ -182,9 +185,25 @@ class FluxoStatusServiceTest {
     }
 
     @Test
+    void submissaoPublicaEventoParaGerarParecer() {
+        service.executar(solicitacaoId, "enviar", alunoId, Perfil.ALUNO, null);
+
+        verify(eventos).publishEvent(new SolicitacaoEnviadaEvent(solicitacao.getId()));
+    }
+
+    @Test
+    void transicoesForaDaSubmissaoNaoPublicamEvento() {
+        solicitacao.alterarStatus(StatusSolicitacao.ENVIADA);
+
+        service.executar(solicitacaoId, "conferir", UUID.randomUUID(), Perfil.SERVIDOR, null);
+
+        verify(eventos, never()).publishEvent(any(Object.class));
+    }
+
+    @Test
     void acaoDuplicadaFalhaNaInicializacao() {
         List<TransicaoStatus> duplicadas = List.of(new EnviarTransicao(), new EnviarTransicao());
-        assertThatThrownBy(() -> new FluxoStatusService(duplicadas, solicitacoes, historicos, coordenadores))
+        assertThatThrownBy(() -> new FluxoStatusService(duplicadas, solicitacoes, historicos, coordenadores, eventos))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("enviar");
     }
