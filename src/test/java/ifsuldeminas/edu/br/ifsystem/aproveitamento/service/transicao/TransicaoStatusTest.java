@@ -55,4 +55,11 @@ class TransicaoStatusTest {
                 StatusSolicitacao.DEFERIDA, StatusSolicitacao.INDEFERIDA);
         assertThat(registrar.perfilExigido()).isEqualTo(Perfil.SERVIDOR);
     }
+
+    @Test
+    void apenasDeferirEIndeferirExigemCoordenador() {
+        assertThat(transicoes).filteredOn(TransicaoStatus::exigeCoordenador)
+                .extracting(TransicaoStatus::acao)
+                .containsExactlyInAnyOrder("deferir", "indeferir");
+    }
 }

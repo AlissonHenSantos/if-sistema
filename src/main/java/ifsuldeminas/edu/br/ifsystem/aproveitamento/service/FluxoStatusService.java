@@ -16,13 +16,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class FluxoStatusService {
-    private static final Set<String> ACOES_DE_COORDENADOR = Set.of("deferir", "indeferir");
-
     private final Map<String, TransicaoStatus> transicoes;
     private final SolicitacaoRepository solicitacoes;
     private final HistoricoStatusRepository historicos;
@@ -56,7 +53,7 @@ public class FluxoStatusService {
         if (perfil == Perfil.ALUNO && !solicitacao.getAlunoId().equals(usuarioId))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solicitacao pertence a outro aluno");
 
-        if (ACOES_DE_COORDENADOR.contains(transicao.acao())
+        if (transicao.exigeCoordenador()
                 && !coordenadores.existsByProfessorIdAndCurso(usuarioId, solicitacao.getCurso()))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Professor nao coordena o curso da solicitacao");
 

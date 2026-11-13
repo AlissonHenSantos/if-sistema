@@ -13,4 +13,8 @@ public interface TransicaoStatus {
     StatusSolicitacao destino();
 
     Perfil perfilExigido();
+
+    default boolean exigeCoordenador() {
+        return false;
+    }
 }

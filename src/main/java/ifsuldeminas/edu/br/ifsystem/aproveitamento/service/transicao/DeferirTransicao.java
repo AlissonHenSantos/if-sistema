@@ -27,4 +27,9 @@ public class DeferirTransicao implements TransicaoStatus {
     public Perfil perfilExigido() {
         return Perfil.PROFESSOR;
     }
+
+    @Override
+    public boolean exigeCoordenador() {
+        return true;
+    }
 }
