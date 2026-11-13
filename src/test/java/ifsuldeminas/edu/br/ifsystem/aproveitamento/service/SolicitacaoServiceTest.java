@@ -83,6 +83,16 @@ class SolicitacaoServiceTest {
                 .containsExactlyInAnyOrder(
                         org.assertj.core.groups.Tuple.tuple("BD I", "UFLA", 40),
                         org.assertj.core.groups.Tuple.tuple("BD II", "UFLA", 30));
+
+        List<HistoricoStatus> hs = tem.getEntityManager()
+                .createQuery("select h from HistoricoStatus h where h.solicitacao.id = :id", HistoricoStatus.class)
+                .setParameter("id", criada.getId()).getResultList();
+        assertThat(hs).singleElement().satisfies(h -> {
+            assertThat(h.getStatusAnterior()).isNull();
+            assertThat(h.getStatusNovo()).isEqualTo(StatusSolicitacao.RASCUNHO);
+            assertThat(h.getResponsavelId()).isEqualTo(aluno);
+            assertThat(h.getObservacao()).isNull();
+        });
     }
 
     // ---------- detalhar ----------

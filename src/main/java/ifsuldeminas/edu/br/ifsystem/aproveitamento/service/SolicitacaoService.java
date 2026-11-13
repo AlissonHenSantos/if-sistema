@@ -6,6 +6,7 @@ import ifsuldeminas.edu.br.ifsystem.aproveitamento.api.AproveitamentoDtos.Histor
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.api.AproveitamentoDtos.SolicitacaoDetalhe;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.api.AproveitamentoDtos.SolicitacaoResumo;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.DisciplinaCursada;
+import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.HistoricoStatus;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.Solicitacao;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.StatusSolicitacao;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.repository.AnexoRepository;
@@ -47,6 +48,7 @@ public class SolicitacaoService {
         for (DisciplinaCursadaEntrada e : d.disciplinas()) {
             disciplinas.save(new DisciplinaCursada(solicitacao, e.nome(), e.instituicao(), e.cargaHoraria()));
         }
+        historicos.save(new HistoricoStatus(solicitacao, null, StatusSolicitacao.RASCUNHO, d.alunoId(), null));
         return solicitacao;
     }
 
