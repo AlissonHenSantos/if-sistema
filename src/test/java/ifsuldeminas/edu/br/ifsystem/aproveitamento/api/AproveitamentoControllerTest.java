@@ -2,9 +2,13 @@ package ifsuldeminas.edu.br.ifsystem.aproveitamento.api;
 
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.api.AproveitamentoDtos.HistoricoItem;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.api.AproveitamentoDtos.SolicitacaoDetalhe;
+import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.ParecerIa;
+import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.RecomendacaoIa;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.Solicitacao;
+import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.StatusParecerIa;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.StatusSolicitacao;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.service.FluxoStatusService;
+import ifsuldeminas.edu.br.ifsystem.aproveitamento.service.ParecerIaService;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.service.SolicitacaoService;
 import ifsuldeminas.edu.br.ifsystem.security.JwtService;
 import ifsuldeminas.edu.br.ifsystem.security.SecurityConfig;
@@ -24,6 +28,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -49,6 +54,8 @@ class AproveitamentoControllerTest {
     private SolicitacaoService solicitacoes;
     @MockitoBean
     private FluxoStatusService fluxo;
+    @MockitoBean
+    private ParecerIaService parecerIa;
     // Dependencias do JwtFilter, que o @WebMvcTest registra como filtro.
     @MockitoBean
     private JwtService jwtService;
@@ -292,5 +299,61 @@ class AproveitamentoControllerTest {
         mvc.perform(postAcao("enviar", null))
                 .andExpect(status().isUnauthorized());
         verifyNoInteractions(fluxo);
+    }
+
+    // ---------- parecer da IA ----------
+
+    private ParecerIa parecer() {
+        return new ParecerIa(solicitacao(aluno), StatusParecerIa.CONCLUIDO, RecomendacaoIa.INCONCLUSIVO,
+                50, "Analise simulada", "fake", null);
+    }
+
+    @Test
+    void parecerIaRetorna200ParaServidor() throws Exception {
+        when(solicitacoes.buscar(solicitacaoId)).thenReturn(solicitacao(aluno));
+        when(parecerIa.maisRecente(solicitacaoId)).thenReturn(Optional.of(parecer()));
+
+        mvc.perform(como(get("/aproveitamentos/{id}/parecer-ia", solicitacaoId), servidor, Perfil.SERVIDOR))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CONCLUIDO"))
+                .andExpect(jsonPath("$.recomendacao").value("INCONCLUSIVO"))
+                .andExpect(jsonPath("$.similaridade").value(50))
+                .andExpect(jsonPath("$.modelo").value("fake"));
+    }
+
+    @Test
+    void parecerIaRetorna403ParaAlunoMesmoSendoDono() throws Exception {
+        mvc.perform(como(get("/aproveitamentos/{id}/parecer-ia", solicitacaoId), aluno, Perfil.ALUNO))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(parecerIa);
+    }
+
+    @Test
+    void parecerIaRetorna404SemParecer() throws Exception {
+        when(solicitacoes.buscar(solicitacaoId)).thenReturn(solicitacao(aluno));
+        when(parecerIa.maisRecente(solicitacaoId)).thenReturn(Optional.empty());
+
+        mvc.perform(como(get("/aproveitamentos/{id}/parecer-ia", solicitacaoId), servidor, Perfil.SERVIDOR))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void regerarParecerIaRetorna202QuandoPermitido() throws Exception {
+        when(solicitacoes.buscar(solicitacaoId)).thenReturn(solicitacao(aluno));
+        when(parecerIa.podeRegerar(servidor, Perfil.SERVIDOR, "ADS")).thenReturn(true);
+
+        mvc.perform(como(post("/aproveitamentos/{id}/parecer-ia/regerar", solicitacaoId), servidor, Perfil.SERVIDOR))
+                .andExpect(status().isAccepted());
+        verify(parecerIa).regerar(solicitacaoId);
+    }
+
+    @Test
+    void regerarParecerIaRetorna403SemPermissao() throws Exception {
+        when(solicitacoes.buscar(solicitacaoId)).thenReturn(solicitacao(aluno));
+        when(parecerIa.podeRegerar(aluno, Perfil.ALUNO, "ADS")).thenReturn(false);
+
+        mvc.perform(como(post("/aproveitamentos/{id}/parecer-ia/regerar", solicitacaoId), aluno, Perfil.ALUNO))
+                .andExpect(status().isForbidden());
+        verify(parecerIa, never()).regerar(any());
     }
 }
