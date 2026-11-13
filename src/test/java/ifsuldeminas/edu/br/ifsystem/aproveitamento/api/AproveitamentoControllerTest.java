@@ -4,6 +4,7 @@ import ifsuldeminas.edu.br.ifsystem.aproveitamento.api.AproveitamentoDtos.Histor
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.api.AproveitamentoDtos.SolicitacaoDetalhe;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.Solicitacao;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.StatusSolicitacao;
+import ifsuldeminas.edu.br.ifsystem.aproveitamento.service.AnexoService;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.service.FluxoStatusService;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.service.SolicitacaoService;
 import ifsuldeminas.edu.br.ifsystem.security.JwtService;
@@ -49,6 +50,8 @@ class AproveitamentoControllerTest {
     private SolicitacaoService solicitacoes;
     @MockitoBean
     private FluxoStatusService fluxo;
+    @MockitoBean
+    private AnexoService anexoService;
     // Dependencias do JwtFilter, que o @WebMvcTest registra como filtro.
     @MockitoBean
     private JwtService jwtService;
