@@ -35,7 +35,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(
                             new UsernamePasswordAuthenticationToken(usuario, null,
                                     List.of(new SimpleGrantedAuthority("ROLE_" + usuario.getPerfil().name()))));
-            } catch (io.jsonwebtoken.JwtException | IllegalArgumentException ignored) {
+            } catch (io.jsonwebtoken.JwtException | IllegalArgumentException | org.springframework.web.server.ResponseStatusException ignored) {
                 SecurityContextHolder.clearContext();
             }
         }

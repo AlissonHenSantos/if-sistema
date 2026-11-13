@@ -16,10 +16,36 @@ public class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http.csrf(csrf -> csrf.disable())
+    org.springframework.boot.web.servlet.FilterRegistrationBean<JwtFilter> jwtFilterRegistration(
+            JwtFilter filter) {
+        var registration =
+                new org.springframework.boot.web.servlet.FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter)
+            throws Exception {
+        return http.addFilterBefore(
+                        jwtFilter,
+                        org.springframework.security.web.authentication
+                                .UsernamePasswordAuthenticationFilter.class)
+                .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .exceptionHandling(
+                        errors ->
+                                errors.authenticationEntryPoint(
+                                        (request, response, exception) -> response.sendError(401)))
+                .authorizeHttpRequests(
+                        auth ->
+                                auth.requestMatchers(
+                                                "/api/rooms/**",
+                                                "/api/reservations/**",
+                                                "/api/keys/**")
+                                        .authenticated()
+                                        .anyRequest()
+                                        .permitAll())
                 .build();
     }
 }
