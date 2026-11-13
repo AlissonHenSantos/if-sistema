@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -34,6 +35,8 @@ public class Solicitacao {
     private OffsetDateTime criadoEm;
     @Column(nullable = false)
     private OffsetDateTime atualizadoEm;
+    @Version
+    private Long version;
 
     protected Solicitacao() {
     }
