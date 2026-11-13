@@ -3,8 +3,11 @@ package ifsuldeminas.edu.br.ifsystem.aproveitamento.api;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.Anexo;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.DisciplinaCursada;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.HistoricoStatus;
+import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.ParecerIa;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.PreDiagnostico;
+import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.RecomendacaoIa;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.Solicitacao;
+import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.StatusParecerIa;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.StatusPreDiagnostico;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.StatusSolicitacao;
 import jakarta.validation.Valid;
@@ -96,6 +99,15 @@ public final class AproveitamentoDtos {
         public static HistoricoItem de(HistoricoStatus h) {
             return new HistoricoItem(h.getStatusAnterior(), h.getStatusNovo(), h.getResponsavelId(),
                     h.getObservacao(), h.getCriadoEm());
+        }
+    }
+
+    public record ParecerIaResposta(UUID id, StatusParecerIa status, RecomendacaoIa recomendacao,
+                                    Integer similaridade, String justificativa, String modelo,
+                                    OffsetDateTime geradoEm, String erro) {
+        public static ParecerIaResposta de(ParecerIa p) {
+            return new ParecerIaResposta(p.getId(), p.getStatus(), p.getRecomendacao(), p.getSimilaridade(),
+                    p.getJustificativa(), p.getModelo(), p.getGeradoEm(), p.getErro());
         }
     }
 }

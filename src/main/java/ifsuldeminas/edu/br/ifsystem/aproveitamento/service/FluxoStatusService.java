@@ -8,6 +8,7 @@ import ifsuldeminas.edu.br.ifsystem.aproveitamento.repository.HistoricoStatusRep
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.repository.SolicitacaoRepository;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.service.transicao.TransicaoStatus;
 import ifsuldeminas.edu.br.ifsystem.usuario.domain.Perfil;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,9 +28,11 @@ public class FluxoStatusService {
     private final SolicitacaoRepository solicitacoes;
     private final HistoricoStatusRepository historicos;
     private final CoordenadorRepository coordenadores;
+    private final ApplicationEventPublisher eventos;
 
     public FluxoStatusService(List<TransicaoStatus> transicoes, SolicitacaoRepository solicitacoes,
-                              HistoricoStatusRepository historicos, CoordenadorRepository coordenadores) {
+                              HistoricoStatusRepository historicos, CoordenadorRepository coordenadores,
+                              ApplicationEventPublisher eventos) {
         Map<String, TransicaoStatus> porAcao = new HashMap<>();
         for (TransicaoStatus t : transicoes) {
             if (porAcao.put(t.acao(), t) != null)
@@ -39,6 +42,7 @@ public class FluxoStatusService {
         this.solicitacoes = solicitacoes;
         this.historicos = historicos;
         this.coordenadores = coordenadores;
+        this.eventos = eventos;
     }
 
     @Transactional
@@ -67,6 +71,9 @@ public class FluxoStatusService {
         solicitacao.alterarStatus(transicao.destino());
         solicitacoes.save(solicitacao);
         historicos.save(new HistoricoStatus(solicitacao, atual, transicao.destino(), usuarioId, observacao));
+        // Submissao: o parecer da IA so e gerado depois do commit (ver ParecerIaService).
+        if (atual == StatusSolicitacao.RASCUNHO)
+            eventos.publishEvent(new SolicitacaoEnviadaEvent(solicitacao.getId()));
         return solicitacao;
     }
 }

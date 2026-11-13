@@ -3,11 +3,13 @@ package ifsuldeminas.edu.br.ifsystem.aproveitamento.api;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.api.AproveitamentoDtos.AcaoRequest;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.api.AproveitamentoDtos.CriarSolicitacao;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.api.AproveitamentoDtos.HistoricoItem;
+import ifsuldeminas.edu.br.ifsystem.aproveitamento.api.AproveitamentoDtos.ParecerIaResposta;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.api.AproveitamentoDtos.SolicitacaoDetalhe;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.api.AproveitamentoDtos.SolicitacaoResumo;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.Solicitacao;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.domain.StatusSolicitacao;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.service.FluxoStatusService;
+import ifsuldeminas.edu.br.ifsystem.aproveitamento.service.ParecerIaService;
 import ifsuldeminas.edu.br.ifsystem.aproveitamento.service.SolicitacaoService;
 import ifsuldeminas.edu.br.ifsystem.usuario.domain.Perfil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,10 +37,13 @@ public class AproveitamentoController {
 
     private final SolicitacaoService solicitacoes;
     private final FluxoStatusService fluxo;
+    private final ParecerIaService parecerIa;
 
-    public AproveitamentoController(SolicitacaoService solicitacoes, FluxoStatusService fluxo) {
+    public AproveitamentoController(SolicitacaoService solicitacoes, FluxoStatusService fluxo,
+                                    ParecerIaService parecerIa) {
         this.solicitacoes = solicitacoes;
         this.fluxo = fluxo;
+        this.parecerIa = parecerIa;
     }
 
     @PostMapping
@@ -76,6 +81,26 @@ public class AproveitamentoController {
         Usuario usuario = usuarioAtual(request);
         exigirDonoSeAluno(usuario, solicitacoes.buscar(id).getAlunoId());
         return solicitacoes.historico(id);
+    }
+
+    @GetMapping("/{id}/parecer-ia")
+    public ParecerIaResposta parecerIa(@PathVariable UUID id, HttpServletRequest request) {
+        Usuario usuario = usuarioAtual(request);
+        if (usuario.perfil() == Perfil.ALUNO)
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Aluno nao acessa o parecer da IA");
+        solicitacoes.buscar(id);
+        return parecerIa.maisRecente(id).map(ParecerIaResposta::de)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parecer da IA nao encontrado"));
+    }
+
+    @PostMapping("/{id}/parecer-ia/regerar")
+    public ResponseEntity<Void> regerarParecerIa(@PathVariable UUID id, HttpServletRequest request) {
+        Usuario usuario = usuarioAtual(request);
+        Solicitacao solicitacao = solicitacoes.buscar(id);
+        if (!parecerIa.podeRegerar(usuario.id(), usuario.perfil(), solicitacao.getCurso()))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Perfil sem permissao para regerar o parecer");
+        parecerIa.regerar(id);
+        return ResponseEntity.accepted().build();
     }
 
     @PostMapping("/{id}/{acao}")

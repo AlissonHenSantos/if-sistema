@@ -44,9 +44,7 @@ public class ParecerIa {
 
     public ParecerIa(Solicitacao solicitacao, StatusParecerIa status, RecomendacaoIa recomendacao,
                      Integer similaridade, String justificativa, String modelo, String erro) {
-        if (similaridade != null && (similaridade < 0 || similaridade > 100)) {
-            throw new IllegalArgumentException("similaridade deve estar entre 0 e 100");
-        }
+        validarSimilaridade(similaridade);
         this.solicitacao = solicitacao;
         this.status = status;
         this.recomendacao = recomendacao;
@@ -55,6 +53,28 @@ public class ParecerIa {
         this.modelo = modelo;
         this.erro = erro;
         this.geradoEm = OffsetDateTime.now();
+    }
+
+    /** Fecha um parecer PROCESSANDO com o resultado da analise. */
+    public void concluir(RecomendacaoIa recomendacao, Integer similaridade, String justificativa, String modelo) {
+        validarSimilaridade(similaridade);
+        this.status = StatusParecerIa.CONCLUIDO;
+        this.recomendacao = recomendacao;
+        this.similaridade = similaridade;
+        this.justificativa = justificativa;
+        this.modelo = modelo;
+        this.erro = null;
+    }
+
+    public void falhar(String erro) {
+        this.status = StatusParecerIa.FALHOU;
+        this.erro = erro;
+    }
+
+    private static void validarSimilaridade(Integer similaridade) {
+        if (similaridade != null && (similaridade < 0 || similaridade > 100)) {
+            throw new IllegalArgumentException("similaridade deve estar entre 0 e 100");
+        }
     }
 
     public UUID getId() {
