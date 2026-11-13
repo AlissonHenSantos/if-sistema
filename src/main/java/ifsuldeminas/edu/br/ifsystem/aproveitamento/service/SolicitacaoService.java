@@ -82,7 +82,9 @@ public class SolicitacaoService {
         return encontradas.stream().map(SolicitacaoResumo::de).toList();
     }
 
-    private Solicitacao buscar(UUID id) {
+    /** Consulta leve da solicitacao (sem filhos); 404 se nao existir. */
+    @Transactional(readOnly = true)
+    public Solicitacao buscar(UUID id) {
         return solicitacoes.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitacao nao encontrada"));
     }

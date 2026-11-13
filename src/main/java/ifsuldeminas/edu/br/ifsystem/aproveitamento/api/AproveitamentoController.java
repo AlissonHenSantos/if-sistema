@@ -58,9 +58,8 @@ public class AproveitamentoController {
     @GetMapping("/{id}")
     public SolicitacaoDetalhe detalhar(@PathVariable UUID id, HttpServletRequest request) {
         Usuario usuario = usuarioAtual(request);
-        SolicitacaoDetalhe detalhe = solicitacoes.detalhar(id);
-        exigirDonoSeAluno(usuario, detalhe.alunoId());
-        return detalhe;
+        exigirDonoSeAluno(usuario, solicitacoes.buscar(id).getAlunoId());
+        return solicitacoes.detalhar(id);
     }
 
     @GetMapping
@@ -75,8 +74,7 @@ public class AproveitamentoController {
     @GetMapping("/{id}/historico")
     public List<HistoricoItem> historico(@PathVariable UUID id, HttpServletRequest request) {
         Usuario usuario = usuarioAtual(request);
-        // detalhar garante o 404 e fornece o dono da solicitacao para a checagem de perfil.
-        exigirDonoSeAluno(usuario, solicitacoes.detalhar(id).alunoId());
+        exigirDonoSeAluno(usuario, solicitacoes.buscar(id).getAlunoId());
         return solicitacoes.historico(id);
     }
 

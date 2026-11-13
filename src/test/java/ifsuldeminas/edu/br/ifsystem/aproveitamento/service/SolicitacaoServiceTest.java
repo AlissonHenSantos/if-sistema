@@ -95,6 +95,26 @@ class SolicitacaoServiceTest {
         });
     }
 
+    // ---------- buscar ----------
+
+    @Test
+    void buscarRetornaSolicitacaoExistente() {
+        UUID aluno = UUID.randomUUID();
+        Solicitacao s = persistir(aluno, StatusSolicitacao.ENVIADA);
+        sincronizar();
+
+        Solicitacao encontrada = service.buscar(s.getId());
+
+        assertThat(encontrada.getId()).isEqualTo(s.getId());
+        assertThat(encontrada.getAlunoId()).isEqualTo(aluno);
+        assertThat(encontrada.getStatus()).isEqualTo(StatusSolicitacao.ENVIADA);
+    }
+
+    @Test
+    void buscarInexistenteDa404() {
+        assertNotFound(() -> service.buscar(UUID.randomUUID()));
+    }
+
     // ---------- detalhar ----------
 
     @Test
