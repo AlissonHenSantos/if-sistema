@@ -10,7 +10,7 @@ import java.util.Set;
 public class DevolverPendenciaTransicao implements TransicaoStatus {
     @Override
     public String acao() {
-        return "devolverPendencia";
+        return "devolver-pendencia";
     }
 
     @Override

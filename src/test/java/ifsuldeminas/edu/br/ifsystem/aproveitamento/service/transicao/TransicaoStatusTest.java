@@ -30,9 +30,12 @@ class TransicaoStatusTest {
     @Test
     void nomeDaClasseCorrespondeAAcaoEmPascalCase() {
         for (TransicaoStatus t : transicoes) {
-            String acao = t.acao();
-            String esperado = Character.toUpperCase(acao.charAt(0)) + acao.substring(1) + "Transicao";
-            assertThat(t.getClass().getSimpleName()).isEqualTo(esperado);
+            StringBuilder esperado = new StringBuilder();
+            for (String parte : t.acao().split("-")) {
+                esperado.append(Character.toUpperCase(parte.charAt(0))).append(parte.substring(1));
+            }
+            esperado.append("Transicao");
+            assertThat(t.getClass().getSimpleName()).isEqualTo(esperado.toString());
         }
     }
 

@@ -10,7 +10,7 @@ import java.util.Set;
 public class ConcluirPreDiagnosticoTransicao implements TransicaoStatus {
     @Override
     public String acao() {
-        return "concluirPreDiagnostico";
+        return "concluir-pre-diagnostico";
     }
 
     @Override
